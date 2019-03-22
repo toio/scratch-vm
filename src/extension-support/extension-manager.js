@@ -1,6 +1,7 @@
 const dispatch = require('../dispatch/central-dispatch');
 const log = require('../util/log');
 const maybeFormatMessage = require('../util/maybe-format-message');
+const formatMessage = require('format-message');
 
 const BlockType = require('./block-type');
 
@@ -145,7 +146,7 @@ class ExtensionManager {
      */
     refreshBlocks () {
         const allPromises = Array.from(this._loadedExtensions.values()).map(serviceName =>
-            dispatch.call(serviceName, 'getInfo')
+            dispatch.call(serviceName, 'getInfo', formatMessage.setup().locale)
                 .then(info => {
                     info = this._prepareExtensionInfo(serviceName, info);
                     dispatch.call('runtime', '_refreshExtensionPrimitives', info);
@@ -169,7 +170,7 @@ class ExtensionManager {
      * @param {string} serviceName - the name of the service hosting the extension.
      */
     registerExtensionService (serviceName) {
-        dispatch.call(serviceName, 'getInfo').then(info => {
+        dispatch.call(serviceName, 'getInfo', formatMessage.setup().locale).then(info => {
             this._registerExtensionInfo(serviceName, info);
         });
     }
@@ -195,7 +196,7 @@ class ExtensionManager {
      * @returns {Promise} resolved once the extension is fully registered or rejected on failure
      */
     _registerInternalExtension (extensionObject) {
-        const extensionInfo = extensionObject.getInfo();
+        const extensionInfo = extensionObject.getInfo(formatMessage.setup().locale);
         const fakeWorkerId = this.nextExtensionWorker++;
         const serviceName = `extension_${fakeWorkerId}_${extensionInfo.id}`;
         return dispatch.setService(serviceName, extensionObject)
